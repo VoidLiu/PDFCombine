@@ -9,17 +9,26 @@
 #import "AppDelegate.h"
 #import <Quartz/Quartz.h>
 
+NSString *const PROCESSING_MESSAGE = @"Output PDF is in the making............ Please Wait........";
+NSString *const INVALID_DIRECTORY_MESSAGE = @"Check your input directory, it might not have the right kind of files and/or PDF file names";
+NSString *const PROCESSING_COMPLETE_MESSAGE = @"The output file is created";
+NSString *const SET_DIRECTORY_MESSAGE = @"Set the input directory. This is done by either setting the item path or by dragging and dropping the path";
+NSString *const DOUBLE_CLICK_MESSAGE = @"Double-click a path component to reveal it in the Finder.";
+
 @interface AppDelegate()
 @property (weak) IBOutlet NSWindow *window;
 
 @property (weak) IBOutlet NSPathControl *pathControl;
 @property (weak) IBOutlet NSTextField *explanationText;
 @property (weak) IBOutlet NSButton *pathSetButton;
-@property (assign) BOOL hasValidPDFFolderPath;
+@property (weak) IBOutlet NSButton *combineButton;
+@property (assign, readonly) BOOL hasValidPDFFolderPath;
 @property (strong) NSArray *sortedPDFFileNameArray;
 @property (strong) NSString *currentFolderPath;
+@property (assign) BOOL isProcessing;
 
-- (void)checkForValidPDFFolder;
+- (void)updateCombineButton;
+- (void)updateExplainText:(NSString *)text;
 @end
 
 @implementation AppDelegate
@@ -32,22 +41,20 @@
     [self.pathControl setDoubleAction:@selector(pathControlDoubleClick:)];
     
     // Clear the explanation text.
-    [self.explanationText setStringValue:@""];
-    self.hasValidPDFFolderPath = YES;
+    [self.explanationText setStringValue:SET_DIRECTORY_MESSAGE];
     _sortedPDFFileNameArray = nil;
     _currentFolderPath = nil;
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    // Insert code here to initialize your application
-    
-//    [AppDelegate openEachFileAt:PDF_FOLDER_PATH];
+    //disable the combine button at launch
+    [_combineButton setEnabled:NO];
 }
 
-- (void)checkForValidPDFFolder{
+- (BOOL)hasValidPDFFolderPath{
 
-    NSString* file;
+    NSURL* fileURL;
     NSURL *url = [[self.pathControl URL] filePathURL] ;
     _currentFolderPath = [url path];
     NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager] enumeratorAtURL:url includingPropertiesForKeys:[NSArray arrayWithObject:NSURLNameKey] options:NSDirectoryEnumerationSkipsHiddenFiles errorHandler:nil];
@@ -60,13 +67,16 @@
     //say if there are 100 files, the first pdf will be named as 001 and the 100th filename will be 100
     NSMutableArray *pdfFileNameArray = [NSMutableArray array];
     
-    while (file = [enumerator nextObject])
+    while (fileURL = [enumerator nextObject])
     {
         // check if it's a directory
         BOOL isDirectory = NO;
-        NSString *filePath = [NSString stringWithFormat:@"%@/%@", _currentFolderPath, file];
-        [[NSFileManager defaultManager] fileExistsAtPath:filePath
+        NSString *filePath = [[fileURL filePathURL] path];
+        BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:filePath
                                              isDirectory: &isDirectory];
+        if (!fileExists) {
+            return NO;
+        }
         
         if (!isDirectory)
         {
@@ -77,8 +87,7 @@
             
             //check whether the pdf file is named appropriate
             if ((number == nil) || !UTTypeConformsTo(fileUTI, kUTTypePDF)) {
-                self.hasValidPDFFolderPath = NO;
-                break;
+                return NO;
             }
             [pdfFileNameArray addObject:[[filePath lastPathComponent] stringByDeletingPathExtension]];
         }
@@ -87,25 +96,39 @@
     _sortedPDFFileNameArray = [pdfFileNameArray sortedArrayUsingDescriptors:
                         @[[NSSortDescriptor sortDescriptorWithKey:@"integerValue"
                                                         ascending:YES]]];
+    return YES;
     
 }
 
 - (IBAction)combine:(id)sender {
     PDFDocument *outputDocument = [[PDFDocument alloc] init];
     
-    NSUInteger pageIndex = 0;
+    NSOperationQueue *queue = [[NSOperationQueue alloc] init];
     
-    for(NSString *fileName in _sortedPDFFileNameArray){
-        //Create PDF document
-        NSString *pdfFilePath = [NSString stringWithFormat:@"%@/%@.%@",_currentFolderPath, fileName, @"pdf"];
-        PDFDocument *inputDocument = [[PDFDocument alloc] initWithURL:[NSURL fileURLWithPath:pdfFilePath]];
-        for (NSUInteger j = 0; j < [inputDocument pageCount]; j++) {
-            PDFPage *page = [inputDocument pageAtIndex:j];
-            [outputDocument insertPage:page atIndex:pageIndex++];
+    [queue addOperationWithBlock:^{
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            _isProcessing = YES;
+            [self updateCombineButton];
+            [self updateExplainText:PROCESSING_MESSAGE];
+        }];
+        NSUInteger pageIndex = 0;
+        for(NSString *fileName in _sortedPDFFileNameArray){
+            //Create PDF document
+            NSString *pdfFilePath = [NSString stringWithFormat:@"%@/%@.%@",_currentFolderPath, fileName, @"pdf"];
+            PDFDocument *inputDocument = [[PDFDocument alloc] initWithURL:[NSURL fileURLWithPath:pdfFilePath]];
+            for (NSUInteger j = 0; j < [inputDocument pageCount]; j++) {
+                PDFPage *page = [inputDocument pageAtIndex:j];
+                [outputDocument insertPage:page atIndex:pageIndex++];
+            }
         }
-    }
-    
-    [outputDocument writeToURL:[NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@.pdf",_currentFolderPath,[_currentFolderPath lastPathComponent]]]];
+        
+        [outputDocument writeToURL:[NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@.pdf",_currentFolderPath,[_currentFolderPath lastPathComponent]]]];
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^{
+            _isProcessing = NO;
+            [self updateCombineButton];
+            [self updateExplainText:PROCESSING_COMPLETE_MESSAGE];
+        }];
+    }];
     
 }
 
@@ -116,10 +139,9 @@
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     [panel setAllowsMultipleSelection:NO];
     [panel setCanChooseDirectories:YES];
-    [panel setCanChooseFiles:YES];
     [panel setResolvesAliases:YES];
     
-    NSString *panelTitle = NSLocalizedString(@"Choose a file", @"Title for the open panel");
+    NSString *panelTitle = NSLocalizedString(@"Choose a Folder", @"Title for the open panel");
     [panel setTitle:panelTitle];
     
     NSString *promptString = NSLocalizedString(@"Choose", @"Prompt for the open panel prompt");
@@ -139,11 +161,14 @@
         // Get the first URL returned from the Open Panel and set it at the first path component of the control.
         NSURL *url = [[panel URLs] objectAtIndex:0];
         [weakSelf.pathControl setURL:url];
+        if (![weakSelf hasValidPDFFolderPath]){
+            [weakSelf updateExplainText:INVALID_DIRECTORY_MESSAGE];
+        } else {
+            // Update the explanation text to show the user how they can reveal the path component.
+            [weakSelf updateExplainText:DOUBLE_CLICK_MESSAGE];
+        }
         
-        // Update the explanation text to show the user how they can reveal the path component.
-        [weakSelf updateExplainText];
-        
-        [self checkForValidPDFFolder];
+        [self updateCombineButton];
     }];
 }
 
@@ -152,29 +177,19 @@
 /*
  This method updates the explanation string that instructs the user how they can reveal the path component.
  */
-- (void)updateExplainText
+- (void)updateExplainText:(NSString *)text
 {
     NSUInteger numItems = [[self.pathControl pathComponentCells] count];
     
     
     // If there are no path components, there is no explanatory text.
     if (numItems == 0) {
-        [self.explanationText setStringValue:@""];
+        [self.explanationText setStringValue:NSLocalizedString(SET_DIRECTORY_MESSAGE, @"")];
         return;
+    } else {
+        [self.explanationText setStringValue:NSLocalizedString(text, @"")];
     }
     
-    if ([self.pathControl pathStyle] == NSPathStyleStandard || [self.pathControl pathStyle] == NSPathStyleNavigationBar)
-    {
-        
-        NSString *explanationString = NSLocalizedString(@"Double-click a path component to reveal it in the Finder.", @"");
-        [self.explanationText setStringValue:explanationString];
-        
-    }
-    else
-    {
-        // Other path styles have no explanatory text.
-        [self.explanationText setStringValue:@""];
-    }
 }
 
 
@@ -200,8 +215,8 @@
         [self.pathControl setURL:URL];
         
         // If appropriate, tell the user how they can reveal the path component.
-        [self updateExplainText];
-        [self checkForValidPDFFolder];
+        [self updateExplainText:DOUBLE_CLICK_MESSAGE];
+        [self updateCombineButton];
         result = YES;
     }
     
@@ -257,4 +272,11 @@
     [[NSWorkspace sharedWorkspace] openURLs:URLArray withAppBundleIdentifier:@"com.apple.Finder" options:NSWorkspaceLaunchWithoutActivation additionalEventParamDescriptor:nil launchIdentifiers:NULL];
 }
 
+- (void)updateCombineButton{
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BOOL enable = [self hasValidPDFFolderPath] && !_isProcessing;
+        [_combineButton setEnabled:enable];
+    });
+}
 @end

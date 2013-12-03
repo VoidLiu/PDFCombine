@@ -649,6 +649,7 @@
         </menu>
         <customObject id="494" customClass="AppDelegate">
             <connections>
+                <outlet property="combineButton" destination="DB4-go-vOY" id="uda-hh-uOn"/>
                 <outlet property="explanationText" destination="9fF-6r-f9J" id="Oue-2f-pYp"/>
                 <outlet property="pathControl" destination="xtK-Je-0t9" id="hSF-s9-cLQ"/>
                 <outlet property="pathSetButton" destination="AZZ-lA-n2M" id="F9D-Qx-wuZ"/>
@@ -711,7 +712,6 @@
                         </buttonCell>
                         <connections>
                             <action selector="combine:" target="494" id="d2b-Iu-ffz"/>
-                            <binding destination="494" name="enabled" keyPath="self.hasValidPDFFolderPath" id="R81-qy-Nxr"/>
                         </connections>
                     </button>
                 </subviews>

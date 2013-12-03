@@ -7,6 +7,11 @@
 //
 
 #import <Cocoa/Cocoa.h>
+extern NSString *const PROCESSING_MESSAGE;
+extern NSString *const INVALID_DIRECTORY_MESSAGE;
+extern NSString *const PROCESSING_COMPLETE_MESSAGE;
+extern NSString *const SET_DIRECTORY_MESSAGE;
+extern NSString *const DOUBLE_CLICK_MESSAGE;
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSPathControlDelegate>
 
