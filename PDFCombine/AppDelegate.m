@@ -11,7 +11,7 @@
 
 NSString *const PROCESSING_MESSAGE = @"Output PDF is in the making............ Please Wait........";
 NSString *const INVALID_DIRECTORY_MESSAGE = @"Check your input directory, it might not have the right kind of files and/or PDF file names";
-NSString *const PROCESSING_COMPLETE_MESSAGE = @"The output file is created";
+NSString *const PROCESSING_COMPLETE_MESSAGE = @"The output file is created. Check the folder contents";
 NSString *const SET_DIRECTORY_MESSAGE = @"Set the input directory. This is done by either setting the item path or by dragging and dropping the path";
 NSString *const DOUBLE_CLICK_MESSAGE = @"Double-click a path component to reveal it in the Finder.";
 

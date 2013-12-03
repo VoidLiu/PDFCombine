@@ -19,6 +19,7 @@
 		E2504D51184A676E00B77C2E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = E2504D4F184A676E00B77C2E /* InfoPlist.strings */; };
 		E2504D53184A676E00B77C2E /* PDFCombineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E2504D52184A676E00B77C2E /* PDFCombineTests.m */; };
 		E2504D5D184A6D2900B77C2E /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2504D5C184A6D2900B77C2E /* Quartz.framework */; };
+		E261DAF1184E2C9B001EA7BF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = E261DAF0184E2C9B001EA7BF /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +53,7 @@
 		E2504D50184A676E00B77C2E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		E2504D52184A676E00B77C2E /* PDFCombineTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PDFCombineTests.m; sourceTree = "<group>"; };
 		E2504D5C184A6D2900B77C2E /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = System/Library/Frameworks/Quartz.framework; sourceTree = SDKROOT; };
+		E261DAF0184E2C9B001EA7BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +81,7 @@
 		E2504D1C184A676D00B77C2E = {
 			isa = PBXGroup;
 			children = (
+				E261DAF0184E2C9B001EA7BF /* README.md */,
 				E2504D2E184A676E00B77C2E /* PDFCombine */,
 				E2504D4C184A676E00B77C2E /* PDFCombineTests */,
 				E2504D27184A676D00B77C2E /* Frameworks */,
@@ -236,6 +239,7 @@
 			files = (
 				E2504D33184A676E00B77C2E /* InfoPlist.strings in Resources */,
 				E2504D41184A676E00B77C2E /* Images.xcassets in Resources */,
+				E261DAF1184E2C9B001EA7BF /* README.md in Resources */,
 				E2504D39184A676E00B77C2E /* Credits.rtf in Resources */,
 				E2504D3F184A676E00B77C2E /* MainMenu.xib in Resources */,
 			);
@@ -468,6 +472,7 @@
 				E2504D58184A676F00B77C2E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E2504D59184A676F00B77C2E /* Build configuration list for PBXNativeTarget "PDFCombineTests" */ = {
 			isa = XCConfigurationList;
@@ -476,6 +481,7 @@
 				E2504D5B184A676F00B77C2E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
